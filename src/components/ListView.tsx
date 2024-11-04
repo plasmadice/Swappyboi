@@ -2,7 +2,7 @@ import React from 'react';
 import { Download, Trash2, AlertCircle, FileImage } from 'lucide-react';
 import { ConvertedImage } from '../types';
 import { ConvertMenu } from './ConvertMenu';
-import { removeExtension, calculateSizeReduction } from '../utils/fileUtils';
+import { removeExtension } from '../utils/fileUtils';
 
 interface ListViewProps {
   images: ConvertedImage[];
@@ -47,7 +47,13 @@ export function ListView({
               className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider
               ${isDark ? 'text-gray-400' : 'text-gray-500'}`}
             >
-              Size
+              Original Size
+            </th>
+            <th
+              className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider
+              ${isDark ? 'text-gray-400' : 'text-gray-500'}`}
+            >
+              New Size
             </th>
             <th
               className={`px-6 py-3 text-right text-xs font-medium uppercase tracking-wider
@@ -64,10 +70,7 @@ export function ListView({
         >
           {images.map((image) => {
             const originalFormat = image.originalFile.type.split('/')[1];
-            const showReduction =
-              image.size &&
-              (originalFormat !== image.format ||
-                image.size < image.originalSize);
+            const isSkipped = image.status === 'done' && originalFormat === image.format;
 
             return (
               <tr
@@ -122,7 +125,11 @@ export function ListView({
                     <span
                       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                       ${
-                        image.status === 'done'
+                        isSkipped
+                          ? isDark
+                            ? 'bg-gray-700 text-gray-200'
+                            : 'bg-gray-100 text-gray-800'
+                          : image.status === 'done'
                           ? isDark
                             ? 'bg-green-900 text-green-200'
                             : 'bg-green-100 text-green-800'
@@ -135,8 +142,10 @@ export function ListView({
                           : 'bg-gray-100 text-gray-800'
                       }`}
                     >
-                      {image.status.charAt(0).toUpperCase() +
-                        image.status.slice(1)}
+                      {isSkipped
+                        ? 'Skipped'
+                        : image.status.charAt(0).toUpperCase() +
+                          image.status.slice(1)}
                     </span>
                   )}
                 </td>
@@ -152,26 +161,16 @@ export function ListView({
                     isDark ? 'text-gray-300' : 'text-gray-500'
                   }`}
                 >
-                  {image.size ? (
-                    <div>
-                      {`${(image.size / 1024).toFixed(1)} KB`}
-                      {showReduction && (
-                        <span
-                          className={`ml-2 text-xs
-                          ${isDark ? 'text-green-400' : 'text-green-600'}`}
-                        >
-                          (-
-                          {calculateSizeReduction(
-                            image.originalSize,
-                            image.size
-                          )}
-                          %)
-                        </span>
-                      )}
-                    </div>
-                  ) : (
-                    '-'
-                  )}
+                  {`${(image.originalSize / 1024).toFixed(1)} KB`}
+                </td>
+                <td
+                  className={`px-6 py-4 whitespace-nowrap text-sm ${
+                    isDark ? 'text-gray-300' : 'text-gray-500'
+                  }`}
+                >
+                  {image.size
+                    ? `${(image.size / 1024).toFixed(1)} KB`
+                    : '-'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex justify-end space-x-2">
